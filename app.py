@@ -506,21 +506,20 @@ def generar_visualizaciones_y_resultados(df):
 
 def main():
     # Header con animacion
-    st.markdown("<h1 style='text-align: center;'>🎓 Smart Scoring UNAB</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center;'>🎓 Smart Scoring Grupo Nods</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #00d9ff; font-size: 1.2rem;'>Sistema Automatizado de Lead Scoring Predictivo</p>", unsafe_allow_html=True)
     
     st.markdown("---")
     
     # Sidebar
     with st.sidebar:
-        st.image("https://via.placeholder.com/300x100/1a1a2e/00d9ff?text=UNAB", use_container_width=True)
-        st.markdown("### ⚙️ Configuración")
+        # Logo Grupo Nods
+        try:
+            st.image("https://raw.githubusercontent.com/Franco-Arce/Smart-Scoring-Grupo-Nods/main/assets/grupo_nods_logo.png", use_container_width=True)
+        except:
+            st.markdown("### 🎓 GRUPO NODS")
         
-        modo = st.radio(
-            "Modo de operación",
-            ["📤 Subir Datos", "📊 Demo con Datos Existentes"],
-            index=0
-        )
+        st.markdown("### ⚙️ Configuración")
         
         st.markdown("---")
         st.markdown("### 📈 Sobre el Modelo")
@@ -544,8 +543,8 @@ def main():
         5. **Días Gestión** (7.6%)
         """)
     
-    # Contenido principal
-    if modo == "📤 Subir Datos":
+    # Contenido principal - Solo modo Upload
+    if True:  # Siempre modo upload
         st.markdown("## 📤 Subir Archivo de Leads")
         
         st.info("""
@@ -650,37 +649,7 @@ def main():
                 st.error(f"❌ Error al cargar el archivo: {str(e)}")
                 st.info("💡 Asegurate de que el archivo esté en el formato correcto.")
     
-    else:  # Demo con datos existentes
-        st.markdown("## 📊 Demo con Datos de Entrenamiento")
-        
-        BASE_DIR = Path(__file__).parent
-        datos_path = BASE_DIR / "data" / "datos_con_features.csv"
-        
-        if datos_path.exists():
-            df = pd.read_csv(datos_path)
-            
-            st.info(f"📁 Cargando datos de demo: {len(df)} leads")
-            
-            # Cargar modelo  
-            modelo, encoders = cargar_modelo()
-            
-            # Preparar datos
-            X = preparar_datos_prediccion(df, encoders)
-            
-            if X is not None:
-                # Predecir
-                probabilidades = modelo.predict_proba(X)[:, 1]
-                df['Probabilidad_Matricula'] = (probabilidades * 100).round(2)
-                df['Score_Categoria'] = pd.cut(
-                    df['Probabilidad_Matricula'],
-                    bins=[0, 30, 60, 100],
-                    labels=['⭐ Bajo', '⭐⭐ Medio', '⭐⭐⭐ Alto']
-                )
-                
-                # Dashboard
-                generar_visualizaciones_y_resultados(df)
-        else:
-            st.error("❌ No se encontraron datos de demo. Ejecuta primero los scripts de procesamiento.")
+
 
 if __name__ == "__main__":
     main()
