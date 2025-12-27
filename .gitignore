@@ -1,0 +1,64 @@
+# Archivos que NO deben ir a GitHub (datos sensibles y archivos grandes)
+
+# Datos del CRM (SENSIBLE - información de leads)
+data/*.xls
+data/*.xlsx
+data/*.csv
+data/Consulta_*.xls
+data/Reporte_*.xls
+
+# Pero SÍ incluir archivos de ejemplo vacíos o documentación
+!data/README.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Streamlit
+.streamlit/secrets.toml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Modelos entrenados (pueden ser muy grandes)
+# Si el modelo es <100MB, se puede subir
+# models/*.pkl
+
+# Temporales
+*.tmp
+*.bak

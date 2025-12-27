@@ -1,0 +1,62 @@
+{
+  "accuracy_train": 0.9279433840874973,
+  "accuracy_test": 0.9090909090909091,
+  "auc_train": 0.9786574214585329,
+  "auc_test": 0.9269186480766838,
+  "n_train": 4663,
+  "n_test": 1166,
+  "feature_importance": [
+    {
+      "feature": "utm_source_clean",
+      "importance": 0.34635594952492177
+    },
+    {
+      "feature": "utm_medium_clean",
+      "importance": 0.23090108722360342
+    },
+    {
+      "feature": "ratio_llamadas_dias",
+      "importance": 0.10139617302057152
+    },
+    {
+      "feature": "CONTADOR_LLAMADOS_TEL",
+      "importance": 0.09067121136461115
+    },
+    {
+      "feature": "dias_gestion",
+      "importance": 0.07602892557142914
+    },
+    {
+      "feature": "programa_categoria",
+      "importance": 0.03968389481740805
+    },
+    {
+      "feature": "whatsapp_entrante_flag",
+      "importance": 0.03468827035768117
+    },
+    {
+      "feature": "Llamadas_discador",
+      "importance": 0.022535113793636687
+    },
+    {
+      "feature": "base_categoria",
+      "importance": 0.02215962342479909
+    },
+    {
+      "feature": "lead_reciente",
+      "importance": 0.013041436759561542
+    },
+    {
+      "feature": "lead_antiguo",
+      "importance": 0.011378722574614484
+    },
+    {
+      "feature": "tiene_email",
+      "importance": 0.00601486226101656
+    },
+    {
+      "feature": "alta_actividad_llamadas",
+      "importance": 0.00514472930614529
+    }
+  ]
+}

@@ -1,0 +1,686 @@
+"""
+Smart Scoring UNAB - Aplicacion de Lead Scoring Predictivo
+Interfaz web para predecir probabilidad de matricula de leads
+VERSION 2.0 - Con procesamiento automático de archivos del CRM
+"""
+
+import streamlit as st
+import pandas as pd
+import numpy as np
+import pickle
+import plotly.express as px
+import plotly.graph_objects as go
+from pathlib import Path
+import sys
+import re
+
+# Configurar la pagina
+st.set_page_config(
+    page_title="Smart Scoring UNAB",
+    page_icon="🎓",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# CSS personalizado para diseño premium
+st.markdown("""
+<style>
+    /* Fondo y tema oscuro */
+    .main {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    }
+    
+    /* Titulo principal */
+    h1 {
+        color: #00d9ff;
+        font-weight: 700;
+        text-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+        padding: 20px 0;
+    }
+    
+    /* Subtitulos */
+    h2, h3 {
+        color: #ffffff;
+        font-weight: 600;
+    }
+    
+    /* Metricas */
+    [data-testid="stMetricValue"] {
+        font-size: 2rem;
+        color: #00d9ff;
+    }
+    
+    /* Cards */
+    .stAlert {
+        background-color: rgba(255, 255, 255, 0.05);
+        border-left: 4px solid #00d9ff;
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Botones */
+    .stButton>button {
+        background: linear-gradient(90deg, #00d9ff 0%, #0099cc 100%);
+        color: white;
+        font-weight: 600;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 217, 255, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 217, 255, 0.5);
+    }
+    
+    /* Tablas */
+    .dataframe {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Sidebar */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0f3460 0%, #16213e 100%);
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Funciones para cargar modelo
+@st.cache_resource
+def cargar_modelo():
+    """Carga el modelo entrenado"""
+    BASE_DIR = Path(__file__).parent
+    modelo_path = BASE_DIR / "models" / "modelo_scoring.pkl"
+    encoders_path = BASE_DIR / "models" / "label_encoders.pkl"
+    
+    with open(modelo_path, 'rb') as f:
+        modelo = pickle.load(f)
+    
+    with open(encoders_path, 'rb') as f:
+        encoders = pickle.load(f)
+    
+    return modelo, encoders
+
+# ===== FUNCIONES DE NORMALIZACION MULTI-UNIVERSIDAD =====
+
+def normalizar_columnas(df):
+    """
+    Normaliza nombres de columnas para compatibilidad entre universidades
+    - Elimina espacios al inicio/final
+    - Mapea nombres comunes entre diferentes CRMs
+    - Soporta: UNAB, Crexe, UEES y otras instituciones
+    """
+    # 1. Eliminar espacios en nombres de columnas
+    df.columns = df.columns.str.strip()
+    
+    # 2. Mapeo de columnas con nombres diferentes
+    mapeo_columnas = {
+        # Crexe/UEES -> UNAB (estandar)
+        'Idcontacto': 'dcontacto',
+        'Lamadas_discador': 'Llamadas_discador',  # Typo en Crexe/UEES
+        'CHKENTRANTEWHATSAPP': 'WhatsApp entrante',
+        'TXTESTADOPRINCIPAL': 'Estado principal',
+        'Ultima resolucion': 'Ultima resolución',
+        
+        # UEES específico
+        'Contador de Llamadas': 'CONTADOR_LLAMADOS_TEL',
+        'Fecha Inserción Leads': 'Fecha insert Lead',
+        'UTM Origen': 'UTM Source',  # UEES usa "Origen" en vez de "Source"
+        
+        # Otras variaciones comunes
+        'Resolucion': 'Resolución',
+        'Fecha y hora de actualizacion': 'Fecha y hora de actualización',
+        'Programa interes': 'Programa interes',  # Ya normalizado
+    }
+    
+    # Aplicar mapeo
+    df = df.rename(columns=mapeo_columnas)
+    
+    # 3. Convertir CHKENTRANTEWHATSAPP (Si/No) a formato booleano
+    if 'WhatsApp entrante' in df.columns:
+        # Si es texto "Si"/"No", convertir
+        if df['WhatsApp entrante'].dtype == 'object':
+            df['WhatsApp entrante'] = df['WhatsApp entrante'].apply(
+                lambda x: 'entrante' if str(x).lower() in ['si', 'sí', 'yes', '1'] else None
+            )
+    
+    return df
+
+# ===== FUNCIONES DE PROCESAMIENTO INTEGRADAS =====
+
+def validar_email(email):
+    """Valida si un email tiene formato correcto"""
+    if pd.isna(email):
+        return False
+    patron = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(patron, str(email).strip()))
+
+def limpiar_datos_integrado(df):
+    """Limpia los datos del CRM (versión integrada para Streamlit)"""
+    
+    with st.spinner("🧹 Limpiando datos..."):
+        # 0. NORMALIZAR COLUMNAS (Multi-universidad)
+        st.info("🔄 Normalizando formato de columnas...")
+        df_limpio = normalizar_columnas(df.copy())
+        
+        # 1. Eliminar columnas completamente vacías
+        columnas_vacias = df_limpio.columns[df_limpio.isnull().all()].tolist()
+        if columnas_vacias:
+            df_limpio = df_limpio.drop(columns=columnas_vacias)
+            st.info(f"✂️ Columnas vacías eliminadas: {', '.join(columnas_vacias)}")
+        
+        # 2. Crear variable objetivo (TARGET)
+        if 'Resolución' in df_limpio.columns:
+            resoluciones_positivas = ['Matriculado', 'Admitido', 'En proceso de pago']
+            df_limpio['target'] = df_limpio['Resolución'].apply(
+                lambda x: 1 if str(x).strip() in resoluciones_positivas else 0
+            )
+            st.success(f"✅ Variable objetivo creada: {df_limpio['target'].sum()} matriculados ({df_limpio['target'].mean()*100:.2f}%)")
+        else:
+            st.warning("⚠️ No se encontró columna 'Resolución' - creando target = 0")
+        
+        # 3. Validar y limpiar emails
+        if 'EMLMAIL' in df_limpio.columns:
+            df_limpio['email_valido'] = df_limpio['EMLMAIL'].apply(validar_email)
+            emails_invalidos = (~df_limpio['email_valido']).sum()
+            st.info(f"📧 Emails validados: {emails_invalidos} inválidos detectados")
+        
+        # 4. Detectar y eliminar duplicados (mismo email + mismo programa)
+        if 'EMLMAIL' in df_limpio.columns and 'Programa interes' in df_limpio.columns:
+            df_con_email = df_limpio[df_limpio['email_valido']].copy()
+            duplicados_mask = df_con_email.duplicated(
+                subset=['EMLMAIL', 'Programa interes'], 
+                keep='first'
+            )
+            indices_duplicados = df_con_email[duplicados_mask].index
+            
+            if len(indices_duplicados) > 0:
+                df_limpio = df_limpio.drop(indices_duplicados)
+                st.warning(f"🗑️ {len(indices_duplicados)} duplicados eliminados (mismo email + programa)")
+        
+        # 5. Normalizar campos de texto
+        if 'Programa interes' in df_limpio.columns:
+            df_limpio['Programa interes'] = df_limpio['Programa interes'].fillna('NO ESPECIFICADO')
+            df_limpio['Programa interes'] = df_limpio['Programa interes'].str.strip().str.upper()
+        
+        if 'Base de datos' in df_limpio.columns:
+            df_limpio['Base de datos'] = df_limpio['Base de datos'].str.strip()
+        
+        for col in ['UTM Medium', 'UTM Source', 'UTM Campaing', 'UTM Content']:
+            if col in df_limpio.columns:
+                df_limpio[col] = df_limpio[col].fillna('no_disponible')
+                df_limpio[col] = df_limpio[col].str.strip().str.lower()
+        
+        # 6. Procesar fechas
+        if 'Fecha insert Lead' in df_limpio.columns:
+            df_limpio['Fecha insert Lead'] = pd.to_datetime(df_limpio['Fecha insert Lead'], errors='coerce')
+        
+        if 'Fecha y hora de actualización' in df_limpio.columns:
+            df_limpio['Fecha y hora de actualización'] = pd.to_datetime(
+                df_limpio['Fecha y hora de actualización'], errors='coerce'
+            )
+            
+            # Calcular días de gestión
+            if 'Fecha insert Lead' in df_limpio.columns:
+                df_limpio['dias_gestion'] = (
+                    df_limpio['Fecha y hora de actualización'] - df_limpio['Fecha insert Lead']
+                ).dt.days
+                df_limpio['dias_gestion'] = df_limpio['dias_gestion'].fillna(0)
+                df_limpio['dias_gestion'] = df_limpio['dias_gestion'].apply(lambda x: max(0, x))
+        
+        st.success(f"✅ Limpieza completada: {len(df_limpio)} leads listos")
+    
+    return df_limpio
+
+def crear_features_integrado(df):
+    """Crea features adicionales (versión integrada para Streamlit)"""
+    
+    with st.spinner("🔧 Creando features..."):
+        df_features = df.copy()
+        
+        # 1. Features de Email
+        if 'email_valido' in df_features.columns:
+            df_features['tiene_email'] = df_features['email_valido'].astype(int)
+        else:
+            df_features['tiene_email'] = 0
+        
+        # 2. Features de WhatsApp
+        if 'WhatsApp entrante' in df_features.columns:
+            df_features['whatsapp_entrante_flag'] = df_features['WhatsApp entrante'].notna().astype(int)
+        else:
+            df_features['whatsapp_entrante_flag'] = 0
+        
+        # 3. Features Temporales
+        if 'dias_gestion' in df_features.columns:
+            df_features['lead_reciente'] = (df_features['dias_gestion'] < 7).astype(int)
+            df_features['lead_antiguo'] = (df_features['dias_gestion'] > 30).astype(int)
+        else:
+            df_features['dias_gestion'] = 0
+            df_features['lead_reciente'] = 0
+            df_features['lead_antiguo'] = 0
+        
+        # 4. Features de Comportamiento
+        if 'CONTADOR_LLAMADOS_TEL' in df_features.columns:
+            df_features['ratio_llamadas_dias'] = df_features.apply(
+                lambda row: row['CONTADOR_LLAMADOS_TEL'] / max(row.get('dias_gestion', 1), 1),
+                axis=1
+            )
+            df_features['alta_actividad_llamadas'] = (df_features['CONTADOR_LLAMADOS_TEL'] > 5).astype(int)
+        else:
+            df_features['CONTADOR_LLAMADOS_TEL'] = 0
+            df_features['ratio_llamadas_dias'] = 0
+            df_features['alta_actividad_llamadas'] = 0
+        
+        if 'Llamadas_discador' not in df_features.columns:
+            df_features['Llamadas_discador'] = 0
+        
+        # 5. Categorizar Programas
+        def categorizar_programa(programa):
+            programa_str = str(programa).upper()
+            if 'TECNOLOGÍA' in programa_str or 'TECNOLOGIA' in programa_str:
+                return 'TECNOLOGIA'
+            elif 'ESPECIALIZACIÓN' in programa_str or 'ESPECIALIZACION' in programa_str:
+                return 'ESPECIALIZACION'
+            elif 'MAESTRÍA' in programa_str or 'MAESTRIA' in programa_str:
+                return 'MAESTRIA'
+            elif 'DERECHO' in programa_str:
+                return 'DERECHO'
+            elif 'ADMINISTR' in programa_str or 'NEGOCIO' in programa_str or 'CONTAD' in programa_str:
+                return 'NEGOCIOS'
+            elif 'SALUD' in programa_str or 'FARMACIA' in programa_str or 'EPIDEMIO' in programa_str:
+                return 'SALUD'
+            else:
+                return 'OTROS'
+        
+        if 'Programa interes' in df_features.columns:
+            df_features['programa_categoria'] = df_features['Programa interes'].apply(categorizar_programa)
+        else:
+            df_features['programa_categoria'] = 'OTROS'
+        
+        # 6. Categorizar Base de Datos
+        def categorizar_base(base):
+            base_str = str(base).upper()
+            if 'PREGRADO' in base_str:
+                return 'PREGRADO'
+            elif 'POSGRADO' in base_str or 'POSTGRADO' in base_str:
+                return 'POSGRADO'
+            elif 'LETO' in base_str:
+                return 'LETO'
+            else:
+                return 'OTRO'
+        
+        if 'Base de datos' in df_features.columns:
+            df_features['base_categoria'] = df_features['Base de datos'].apply(categorizar_base)
+        else:
+            df_features['base_categoria'] = 'OTRO'
+        
+        # 7. Limpiar UTM Source
+        def limpiar_utm_source(source):
+            source_str = str(source).lower()
+            if 'google' in source_str:
+                return 'google'
+            elif 'fb' in source_str or 'facebook' in source_str:
+                return 'facebook'
+            else:
+                return 'otros'
+        
+        if 'UTM Source' in df_features.columns:
+            df_features['utm_source_clean'] = df_features['UTM Source'].apply(limpiar_utm_source)
+        else:
+            df_features['utm_source_clean'] = 'otros'
+        
+        # 8. Limpiar UTM Medium
+        def limpiar_utm_medium(medium):
+            medium_str = str(medium).lower()
+            if 'paid' in medium_str or 'social' in medium_str:
+                return 'paid_social'
+            elif 'organic' in medium_str:
+                return 'organic'
+            else:
+                return 'otros'
+        
+        if 'UTM Medium' in df_features.columns:
+            df_features['utm_medium_clean'] = df_features['UTM Medium'].apply(limpiar_utm_medium)
+        else:
+            df_features['utm_medium_clean'] = 'otros'
+        
+        st.success("✅ Features creadas exitosamente!")
+    
+    return df_features
+
+def detectar_tipo_archivo(df):
+    """
+    Detecta si el archivo ya está procesado o si es del CRM original
+    Returns: 'procesado', 'crm_original', 'desconocido'
+    """
+    # Columnas que debe tener un archivo procesado
+    columnas_procesadas = [
+        'programa_categoria', 'base_categoria', 
+        'utm_source_clean', 'utm_medium_clean',
+        'ratio_llamadas_dias'
+    ]
+    
+    # Columnas típicas del CRM original
+    columnas_crm = ['dcontacto', 'Nombre y Apellido', 'TELTELEFONO', 'Resolución']
+    
+    tiene_procesadas = all(col in df.columns for col in columnas_procesadas)
+    tiene_crm = any(col in df.columns for col in columnas_crm)
+    
+    if tiene_procesadas:
+        return 'procesado'
+    elif tiene_crm:
+        return 'crm_original'
+    else:
+        return 'desconocido'
+
+def preparar_datos_prediccion(df, encoders):
+    """
+    Prepara los datos para prediccion (mismo proceso que entrenamiento)
+    """
+    # Columnas necesarias para el modelo
+    columnas_modelo = [
+        'CONTADOR_LLAMADOS_TEL',
+        'Llamadas_discador',
+        'dias_gestion',
+        'ratio_llamadas_dias',
+        'programa_categoria',
+        'base_categoria',
+        'utm_source_clean',
+        'utm_medium_clean',
+        'tiene_email',
+        'whatsapp_entrante_flag',
+        'lead_reciente',
+        'lead_antiguo',
+        'alta_actividad_llamadas'
+    ]
+    
+    # Verificar que todas las columnas existen
+    columnas_faltantes = [col for col in columnas_modelo if col not in df.columns]
+    if columnas_faltantes:
+        st.error(f"❌ Faltan columnas necesarias: {columnas_faltantes}")
+        return None
+    
+    # Seleccionar columnas
+    X = df[columnas_modelo].copy()
+    
+    # Codificar categoricas
+    columnas_categoricas = ['programa_categoria', 'base_categoria', 'utm_source_clean', 'utm_medium_clean']
+    
+    for col in columnas_categoricas:
+        if col in encoders:
+            le = encoders[col]
+            # Manejar categorias nuevas
+            X[col] = X[col].apply(
+                lambda x: x if x in le.classes_ else le.classes_[0]
+            )
+            X[col] = le.transform(X[col])
+    
+    return X
+
+def generar_visualizaciones_y_resultados(df):
+    """Genera métricas, gráficos y tablas de resultados"""
+    
+    # Ordenar por probabilidad
+    df_sorted = df.sort_values('Probabilidad_Matricula', ascending=False)
+    
+    st.success("✅ Scores generados exitosamente!")
+    
+    # Métricas principales
+    st.markdown("## 📊 Resumen de Resultados")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("Total Leads", f"{len(df):,}")
+    
+    with col2:
+        altos = (df['Probabilidad_Matricula'] > 60).sum()
+        st.metric("Alto Potencial", f"{altos:,}", delta=f"{(altos/len(df)*100):.1f}%")
+    
+    with col3:
+        st.metric("Score Promedio", f"{df['Probabilidad_Matricula'].mean():.1f}%")
+    
+    with col4:
+        st.metric("Score Máximo", f"{df['Probabilidad_Matricula'].max():.1f}%")
+    
+    # Gráficos
+    st.markdown("---")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### 📊 Distribución de Scores")
+        fig_hist = px.histogram(
+            df, x='Probabilidad_Matricula', nbins=30,
+            color_discrete_sequence=['#00d9ff'], template='plotly_dark'
+        )
+        fig_hist.update_layout(
+            xaxis_title="Probabilidad de Matrícula (%)",
+            yaxis_title="Cantidad de Leads",
+            showlegend=False
+        )
+        st.plotly_chart(fig_hist, use_container_width=True)
+    
+    with col2:
+        st.markdown("### 🎯 Distribución por Categoría")
+        categoria_counts = df['Score_Categoria'].value_counts()
+        fig_pie = px.pie(
+            values=categoria_counts.values, names=categoria_counts.index,
+            color_discrete_sequence=['#ff6b6b', '#feca57', '#48dbfb'],
+            template='plotly_dark'
+        )
+        st.plotly_chart(fig_pie, use_container_width=True)
+    
+    # Top 20 Leads
+    st.markdown("---")
+    st.markdown("### 🏆 Top 20 Leads con Mayor Probabilidad")
+    
+    columnas_mostrar = [
+        'dcontacto', 'Nombre y Apellido', 'TELTELEFONO', 
+        'Programa interes', 'Probabilidad_Matricula', 'Score_Categoria'
+    ]
+    
+    columnas_disponibles = [col for col in columnas_mostrar if col in df_sorted.columns]
+    
+    st.dataframe(
+        df_sorted[columnas_disponibles].head(20),
+        use_container_width=True,
+        hide_index=True
+    )
+    
+    # Descargar resultados
+    st.markdown("---")
+    st.markdown("### 💾 Descargar Resultados")
+    
+    csv = df_sorted.to_csv(index=False, encoding='utf-8-sig')
+    
+    st.download_button(
+        label="📥 Descargar CSV con Scores",
+        data=csv,
+        file_name="leads_con_scores.csv",
+        mime="text/csv",
+        use_container_width=True
+    )
+
+def main():
+    # Header con animacion
+    st.markdown("<h1 style='text-align: center;'>🎓 Smart Scoring UNAB</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #00d9ff; font-size: 1.2rem;'>Sistema Automatizado de Lead Scoring Predictivo</p>", unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Sidebar
+    with st.sidebar:
+        st.image("https://via.placeholder.com/300x100/1a1a2e/00d9ff?text=UNAB", use_container_width=True)
+        st.markdown("### ⚙️ Configuración")
+        
+        modo = st.radio(
+            "Modo de operación",
+            ["📤 Subir Datos", "📊 Demo con Datos Existentes"],
+            index=0
+        )
+        
+        st.markdown("---")
+        st.markdown("### 📈 Sobre el Modelo")
+        st.info("""
+        **Random Forest Classifier**
+        
+        - ✅ AUC-ROC: 0.927
+        - ✅ Accuracy: 90.91%
+        - ✅ Recall: 83%
+        
+        El modelo predice la probabilidad de que un lead se matricule.
+        """)
+        
+        st.markdown("---")
+        st.markdown("### 🎯 Features Importantes")
+        st.markdown("""
+        1. **UTM Source** (34.6%)
+        2. **UTM Medium** (23.1%)
+        3. **Ratio Llamadas/Días** (10.1%)
+        4. **Contador Llamadas** (9.1%)
+        5. **Días Gestión** (7.6%)
+        """)
+    
+    # Contenido principal
+    if modo == "📤 Subir Datos":
+        st.markdown("## 📤 Subir Archivo de Leads")
+        
+        st.info("""
+        💡 **Compatibilidad Multi-Universidad**
+        
+        La app funciona con archivos de **cualquier universidad** del Grupo Nods:
+        - ✅ UNAB
+        - ✅ Crexe
+        - ✅ UEES
+        - ✅ Otras instituciones con estructura similar
+        
+        Podés subir **directamente el archivo del CRM** (Excel o CSV) y la app lo procesará automáticamente.
+        También podés subir archivos ya procesados con features.
+        """)
+        
+        uploaded_file = st.file_uploader(
+            "Arrastrá o seleccioná el archivo",
+            type=['csv', 'xls', 'xlsx'],
+            help="Archivo del CRM Neotel o CSV ya procesado"
+        )
+        
+        if uploaded_file is not None:
+            # Cargar datos (detectar tipo de archivo)
+            try:
+                if uploaded_file.name.endswith('.csv'):
+                    df = pd.read_csv(uploaded_file)
+                else:
+                    df = pd.read_excel(uploaded_file)
+                
+                st.success(f"✅ Archivo cargado: {len(df)} leads")
+                
+                # Detectar tipo de archivo
+                tipo_archivo = detectar_tipo_archivo(df)
+                
+                if tipo_archivo == 'procesado':
+                    st.markdown("<p class='ready-badge'>✅ Archivo YA procesado - Listo para predecir</p>", unsafe_allow_html=True)
+                    df_procesado = df
+                    mostrar_predicciones = True
+                    
+                elif tipo_archivo == 'crm_original':
+                    st.markdown("<p class='processing-badge'>⚠️ Archivo del CRM detectado - Requiere procesamiento</p>", unsafe_allow_html=True)
+                    
+                    # Mostrar vista previa
+                    with st.expander("👁️ Vista Previa de Datos Originales"):
+                        st.dataframe(df.head(5), use_container_width=True)
+                    
+                    # Botón para procesar
+                    if st.button("🔧 PROCESAR DATOS", use_container_width=True, type="primary"):
+                        # Procesar datos
+                        df_limpio = limpiar_datos_integrado(df)
+                        df_procesado = crear_features_integrado(df_limpio)
+                        
+                        # Guardar en session state
+                        st.session_state['df_procesado'] = df_procesado
+                        st.session_state['mostrar_predicciones'] = True
+                        st.rerun()
+                    
+                    mostrar_predicciones = False
+                    
+                    # Si ya está en session state
+                    if 'df_procesado' in st.session_state and st.session_state.get('mostrar_predicciones', False):
+                        df_procesado = st.session_state['df_procesado']
+                        mostrar_predicciones = True
+                        st.success("✅ Datos procesados correctamente!")
+                    
+                else:
+                    st.error("❌ No se pudo detectar el formato del archivo. Asegurate de subir un archivo del CRM Neotel o un CSV procesado.")
+                    mostrar_predicciones = False
+                
+                # Generar predicciones
+                if mostrar_predicciones:
+                    st.markdown("---")
+                    
+                    # Vista previa de datos procesados
+                    with st.expander("👁️ Vista Previa de Datos Procesados"):
+                        st.dataframe(df_procesado.head(10), use_container_width=True)
+                    
+                    if st.button("🚀 GENERAR SCORES", use_container_width=True, type="primary"):
+                        with st.spinner("🤖 Modelo trabajando..."):
+                            # Cargar modelo
+                            modelo, encoders = cargar_modelo()
+                            
+                            # Preparar datos
+                            X = preparar_datos_prediccion(df_procesado, encoders)
+                            
+                            if X is not None:
+                                # Predecir
+                                probabilidades = modelo.predict_proba(X)[:, 1]
+                                
+                                # Agregar scores
+                                df_procesado['Probabilidad_Matricula'] = (probabilidades * 100).round(2)
+                                df_procesado['Score_Categoria'] = pd.cut(
+                                    df_procesado['Probabilidad_Matricula'],
+                                    bins=[0, 30, 60, 100],
+                                    labels=['⭐ Bajo', '⭐⭐ Medio', '⭐⭐⭐ Alto']
+                                )
+                                
+                                # Generar visualizaciones
+                                generar_visualizaciones_y_resultados(df_procesado)
+                
+            except Exception as e:
+                st.error(f"❌ Error al cargar el archivo: {str(e)}")
+                st.info("💡 Asegurate de que el archivo esté en el formato correcto.")
+    
+    else:  # Demo con datos existentes
+        st.markdown("## 📊 Demo con Datos de Entrenamiento")
+        
+        BASE_DIR = Path(__file__).parent
+        datos_path = BASE_DIR / "data" / "datos_con_features.csv"
+        
+        if datos_path.exists():
+            df = pd.read_csv(datos_path)
+            
+            st.info(f"📁 Cargando datos de demo: {len(df)} leads")
+            
+            # Cargar modelo  
+            modelo, encoders = cargar_modelo()
+            
+            # Preparar datos
+            X = preparar_datos_prediccion(df, encoders)
+            
+            if X is not None:
+                # Predecir
+                probabilidades = modelo.predict_proba(X)[:, 1]
+                df['Probabilidad_Matricula'] = (probabilidades * 100).round(2)
+                df['Score_Categoria'] = pd.cut(
+                    df['Probabilidad_Matricula'],
+                    bins=[0, 30, 60, 100],
+                    labels=['⭐ Bajo', '⭐⭐ Medio', '⭐⭐⭐ Alto']
+                )
+                
+                # Dashboard
+                generar_visualizaciones_y_resultados(df)
+        else:
+            st.error("❌ No se encontraron datos de demo. Ejecuta primero los scripts de procesamiento.")
+
+if __name__ == "__main__":
+    main()
