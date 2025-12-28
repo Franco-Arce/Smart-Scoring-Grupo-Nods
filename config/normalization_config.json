@@ -1,0 +1,163 @@
+{
+    "version": "1.0",
+    "description": "Normalization configuration for multi-university data",
+    "column_mappings": {
+        "Resolucion": "Resolución",
+        "Resolucion ": "Resolución",
+        "Idcontacto": "dcontacto",
+        "Lamadas_discador": "Llamadas_discador",
+        "CHKENTRANTEWHATSAPP": "WhatsApp entrante",
+        "TXTESTADOPRINCIPAL": "Estado principal",
+        "Contador de Llamadas": "CONTADOR_LLAMADOS_TEL",
+        "Fecha Inserción Leads": "Fecha insert Lead",
+        "Fecha insert Lead ": "Fecha insert Lead",
+        "UTM Origen": "UTM Source",
+        "Ultima resolucion": "Ultima resolución",
+        "Fecha y hora de actualizacion": "Fecha y hora de actualización",
+        "Fecha y hora de actualizacion ": "Fecha y hora de actualización",
+        "Fecha y hora del proximo llamado": "Fecha y hora del próximo llamado",
+        "Nombre y Apellido ": "Nombre y Apellido",
+        "Programa interes ": "Programa interes",
+        "TELWHATSAPP": "WhatsApp"
+    },
+    "resolution_mappings": {
+        "success": [
+            "Matriculado",
+            "Matriculado / Inscripto",
+            "Ya matriculado en Anáhuac",
+            "Admitido",
+            "Inscripto en curso",
+            "Ya es alumno de la universidad"
+        ],
+        "in_progress": [
+            "En proceso de pago",
+            "En proceso de pago - No contesta",
+            "En proceso de pago - no contesta",
+            "Oportunidad de venta",
+            "Oportunidad de venta - No contesta",
+            "Oportunidad de venta-No contesta",
+            "Compromiso pago - Cartera",
+            "Compromiso pago - cartera",
+            "Analizando propuesta"
+        ],
+        "rejected_enrolled_elsewhere": [
+            "Inscripto en otra universisdad",
+            "Inscripto en otra universidad"
+        ],
+        "rejected_no_contact": [
+            "No contesta",
+            "NotProcessed",
+            "NoAnswerDialer",
+            "Buzon de voz",
+            "AnswerAnsweringMachineDialer",
+            "UnallocatedDialer",
+            "AnswerQueueDialer",
+            "RejectedDialer",
+            "TimeoutCategorization",
+            "Cierre de lead por no contacto",
+            "Imposible contactar"
+        ],
+        "rejected_phone_issue": [
+            "Telefono erroneo o fuera de servicio",
+            "Teléfono erróneo o fuera de servicio"
+        ],
+        "rejected_whatsapp_issue": [
+            "Deja de responder Whatsapp",
+            "Dejo de responder Whatsapp",
+            "Responde mensaje de Whastapp",
+            "Responde mensaje de whatsapp - No contesta"
+        ],
+        "rejected_not_interested": [
+            "No es la oferta buscada",
+            "Le parece caro",
+            "Motivos personales",
+            "Pide no ser llamado",
+            "Spam - Desconoce haber solicitado informacion",
+            "Spam - Desconoce haber solicitado informacion :",
+            "No cumple requisito",
+            "Horarios",
+            "Modalidad de cursado",
+            "Movilidad de cursado",
+            "Siguiente cohorte",
+            "Busca maestría"
+        ],
+        "rejected_other": [
+            "Duplicado",
+            "Dejo de responder",
+            "No indica motivo\t",
+            "Cerrado por total de toques"
+        ],
+        "informational": [
+            "Se brinda informacion",
+            "Se brinda información Whatsapp",
+            "Plantilla Bienvenida Wpp",
+            "Volver a llamar"
+        ]
+    },
+    "resolution_to_binary": {
+        "success": 1,
+        "in_progress": 0,
+        "rejected_enrolled_elsewhere": 0,
+        "rejected_no_contact": 0,
+        "rejected_phone_issue": 0,
+        "rejected_whatsapp_issue": 0,
+        "rejected_not_interested": 0,
+        "rejected_other": 0,
+        "informational": 0
+    },
+    "required_columns": [
+        "dcontacto",
+        "Resolución",
+        "Base de datos",
+        "Canal",
+        "EMLMAIL",
+        "TELTELEFONO"
+    ],
+    "optional_columns": [
+        "CONTADOR_LLAMADOS_TEL",
+        "Llamadas_discador",
+        "Fecha insert Lead",
+        "Fecha y hora de actualización",
+        "Fecha y hora del próximo llamado",
+        "Nombre y Apellido",
+        "Programa interes",
+        "WhatsApp entrante",
+        "WhatsApp",
+        "Estado principal",
+        "Etapa",
+        "Ultima resolución",
+        "UTM Source",
+        "UTM Medium",
+        "UTM Campaing",
+        "UTM Content",
+        "UTM TERM",
+        "Operador",
+        "Nombre Operador",
+        "Mensaje"
+    ],
+    "leakage_columns": [
+        "Resolución",
+        "Resolucion",
+        "Ultima resolución",
+        "Ultima resolucion",
+        "Estado principal",
+        "TXTESTADOPRINCIPAL",
+        "Etapa"
+    ],
+    "data_types": {
+        "dcontacto": "int64",
+        "CONTADOR_LLAMADOS_TEL": "float64",
+        "Llamadas_discador": "float64",
+        "TELTELEFONO": "float64",
+        "Fecha insert Lead": "datetime64[ns]",
+        "Fecha y hora de actualización": "datetime64[ns]",
+        "Fecha y hora del próximo llamado": "datetime64[ns]"
+    },
+    "universities": [
+        "UNAB",
+        "Crexe",
+        "UEES",
+        "Anahuac",
+        "Unisangil"
+    ]
+}

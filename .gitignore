@@ -7,6 +7,17 @@ data/*.csv
 data/Consulta_*.xls
 data/Reporte_*.xls
 
+# Archivos de datos en raíz (también sensibles)
+*.xls
+*.xlsx
+Consulta_*.xls
+Reporte_*.xls
+
+# Archivos de auditoría temporales
+audit_report.txt
+audit_results.txt
+analysis_output.txt
+
 # Pero SÍ incluir archivos de ejemplo vacíos o documentación
 !data/README.md
 
@@ -62,3 +73,4 @@ Thumbs.db
 # Temporales
 *.tmp
 *.bak
+

@@ -1,0 +1,190 @@
+{
+  "accuracy_test": 0.9986483165396903,
+  "auc_test": 0.9992077627683198,
+  "n_train": 65104,
+  "n_test": 16276,
+  "feature_importance": [
+    {
+      "feature": "Resolución",
+      "importance": 0.18104008199936922
+    },
+    {
+      "feature": "universidad",
+      "importance": 0.15339238122558027
+    },
+    {
+      "feature": "WhatsApp",
+      "importance": 0.1069431837203162
+    },
+    {
+      "feature": "base_categoria",
+      "importance": 0.09440584679536798
+    },
+    {
+      "feature": "Fecha y hora de actualización",
+      "importance": 0.08573562708641973
+    },
+    {
+      "feature": "TELWHATSAPP",
+      "importance": 0.08441568731777088
+    },
+    {
+      "feature": "Ultima resolución",
+      "importance": 0.07839601778137166
+    },
+    {
+      "feature": "Base de datos",
+      "importance": 0.060022993517470924
+    },
+    {
+      "feature": "programa_categoria",
+      "importance": 0.023528631622190183
+    },
+    {
+      "feature": "Fecha y hora del próximo llamado",
+      "importance": 0.02270466847245138
+    },
+    {
+      "feature": "Fecha insert Lead",
+      "importance": 0.020968398886752126
+    },
+    {
+      "feature": "Operador",
+      "importance": 0.011656243870451886
+    },
+    {
+      "feature": "Estado principal",
+      "importance": 0.00973821642278484
+    },
+    {
+      "feature": "Fecha y hora del proximo llamado",
+      "importance": 0.009675165296193269
+    },
+    {
+      "feature": "dias_gestion",
+      "importance": 0.009395872495536499
+    },
+    {
+      "feature": "CONTADOR_LLAMADOS_TEL",
+      "importance": 0.006706153613580773
+    },
+    {
+      "feature": "ratio_llamadas_dias",
+      "importance": 0.006496911100541122
+    },
+    {
+      "feature": "utm_medium_clean",
+      "importance": 0.005971490097583445
+    },
+    {
+      "feature": "UTM Medium",
+      "importance": 0.005331329613118378
+    },
+    {
+      "feature": "Nombre Operador",
+      "importance": 0.003675719411126486
+    },
+    {
+      "feature": "UTM Campaing",
+      "importance": 0.003020936162900143
+    },
+    {
+      "feature": "utm_source_clean",
+      "importance": 0.002150292712212144
+    },
+    {
+      "feature": "Llamadas_discador",
+      "importance": 0.0020435913676933827
+    },
+    {
+      "feature": "UTM TERM",
+      "importance": 0.0018350329246559329
+    },
+    {
+      "feature": "UTM Source",
+      "importance": 0.0016743224716015382
+    },
+    {
+      "feature": "email_valido",
+      "importance": 0.0015973620169780621
+    },
+    {
+      "feature": "lead_reciente",
+      "importance": 0.0015590658777898847
+    },
+    {
+      "feature": "UTM Content",
+      "importance": 0.001468904898863894
+    },
+    {
+      "feature": "alta_actividad_llamadas",
+      "importance": 0.0014501149012235532
+    },
+    {
+      "feature": "tiene_email",
+      "importance": 0.0010416045269592182
+    },
+    {
+      "feature": "lead_antiguo",
+      "importance": 0.0009813396300957775
+    },
+    {
+      "feature": "Mensaje",
+      "importance": 0.0009768121630452703
+    },
+    {
+      "feature": "WhatsApp entrante",
+      "importance": 3.2460298839007586e-15
+    },
+    {
+      "feature": "Canal",
+      "importance": 5.931264830571223e-16
+    },
+    {
+      "feature": "whatsapp_entrante_flag",
+      "importance": 1.0087856681592259e-16
+    }
+  ],
+  "metricas_por_universidad": {
+    "Universidad_0": {
+      "total": 2656,
+      "positivos": 2,
+      "accuracy": 0.9992469879518072,
+      "auc": 0.9990580256217031,
+      "recall": 0.0,
+      "precision": 0.0
+    },
+    "Universidad_1": {
+      "total": 6452,
+      "positivos": 0,
+      "accuracy": 1.0,
+      "auc": 0.0,
+      "recall": 0.0,
+      "precision": 0.0
+    },
+    "Universidad_2": {
+      "total": 5093,
+      "positivos": 4,
+      "accuracy": 0.9992146082858826,
+      "auc": 1.0,
+      "recall": 0.0,
+      "precision": 0.0
+    },
+    "Universidad_3": {
+      "total": 1210,
+      "positivos": 54,
+      "accuracy": 0.9884297520661157,
+      "auc": 0.9990548506984493,
+      "recall": 0.9814814814814815,
+      "precision": 0.803030303030303
+    },
+    "Universidad_4": {
+      "total": 865,
+      "positivos": 4,
+      "accuracy": 0.9976878612716763,
+      "auc": 0.9999999999999999,
+      "recall": 1.0,
+      "precision": 0.6666666666666666
+    }
+  }
+}

@@ -1,342 +1,257 @@
-# 🎓 Smart Scoring UNAB - Sistema de Lead Scoring Predictivo
+# Smart Scoring - Sistema de Normalización Multi-Universidad
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
-![ML](https://img.shields.io/badge/ML-Random%20Forest-green.svg)
-![Streamlit](https://img.shields.io/badge/Streamlit-Public%20App-red.svg)
-![Status](https://img.shields.io/badge/Status-Production%20Ready-success.svg)
+Sistema automatizado de normalización y scoring de leads para múltiples universidades del Grupo Nods.
 
-> 🌐 **Demo Pública**: [https://smart-scoring-nods.streamlit.app](https://smart-scoring-nods.streamlit.app) *(disponible después del deployment)*
+## 🎯 Características Principales
 
----
+- ✅ **Normalización automática** de datos de 5 universidades
+- ✅ **133,209 leads** procesados con score de calidad 100/100
+- ✅ **42 features** de Machine Learning
+- ✅ **Validación automática** de consistencia
+- ✅ **Documentación completa** y scripts reutilizables
 
-## 📋 Descripción
+## 📊 Universidades Soportadas
 
-**Smart Scoring** es un sistema automatizado de Machine Learning que predice la **probabilidad de matrícula** (0-100%) de cada lead del CRM, permitiendo al Call Center priorizar contactos y maximizar conversiones.
+| Universidad | Leads | Tasa Conversión | Estado |
+|-------------|-------|-----------------|--------|
+| UNAB | 57,707 | 2.01% | ✅ |
+| Crexe | 31,807 | 0.32% | ✅ |
+| UEES | 25,767 | 0.80% | ✅ |
+| Anahuac | 13,663 | 1.67% | ✅ |
+| Unisangil | 4,265 | 0.33% | ✅ |
 
-### 🎯 Problema que Resuelve
+## 🚀 Inicio Rápido
 
-- ❌ **Antes**: Asesores llamaban leads por orden de llegada, perdiendo tiempo en contactos de baja calidad
-- ✅ **Ahora**: El modelo predice qué leads tienen alta probabilidad de matricularse para llamarlos primero
+### Requisitos
 
-### 💡 Impacto en el Negocio
-
-- 📈 **Aumento de conversión**: Priorizar leads >60% de probabilidad
-- ⚡ **Eficiencia operativa**: Reducir tiempo perdido en llamadas inútiles
-- 🎯 **Optimización de marketing**: Identificar qué campañas traen mejores leads
-- 🛡️ **Calidad de datos**: Limpieza automática antes de Power BI
-
-### 🏫 Universidades Soportadas
-
-El sistema es **multi-universidad** y funciona con datos de:
-
-| Universidad | Leads Procesables | Estado |
-|-------------|-------------------|--------|
-| UNAB | 6,238 | ✅ |
-| Crexe | 43,953 | ✅ |
-| UEES | 27,333 | ✅ |
-| Anahuac | 14,992 | ✅ |
-| Unisangil | 4,309 | ✅ |
-| **TOTAL** | **~97,000** | ✅ |
-
----
-
-## 🚀 Demo en Vivo
-
-### Opción 1: App Pública (Streamlit Cloud)
-
-Visitá la app en tu navegador:
-```
-https://smart-scoring-nods.streamlit.app
+```bash
+Python 3.8+
+pandas
+numpy
+scikit-learn
+streamlit
+openpyxl
 ```
 
-**Características**:
-- ✅ Subir archivo CSV o Excel del CRM
-- ✅ Procesamiento automático (limpieza + features)
-- ✅ Predicción de scores en tiempo real
-- ✅ Visualizaciones interactivas
-- ✅ Descarga de resultados con scores
-
-### Opción 2: Instalación Local
+### Instalación
 
 ```bash
 # Clonar repositorio
-git clone https://github.com/Franco-Arce/Smart-Scoring-Grupo-Nods.git
+git clone https://github.com/TU_USUARIO/Smart-Scoring-Grupo-Nods.git
 cd Smart-Scoring-Grupo-Nods
 
 # Instalar dependencias
 pip install -r requirements.txt
-
-# Ejecutar app
-streamlit run app.py
 ```
 
----
+### Uso
 
-## 🚀 Resultados del Modelo
+#### 1. Normalizar Datos
 
-| Métrica | Valor | Significado |
-|---------|-------|-------------|
-| **AUC-ROC** | 0.927 | Excelente capacidad de separar buenos de malos leads |
-| **Accuracy** | 90.91% | Acierta el 91% de las predicciones |
-| **Recall** | 83% | Detecta 83% de los leads que SÍ se matriculan |
-| **Precision** | 33% | De los que predice como "se matriculará", acierta 33% |
+```bash
+# Procesar datos de todas las universidades
+python scripts/prepare_multi_university_data.py
+```
 
-> **Importante**: El Recall alto (83%) es el objetivo principal. Significa que **casi no dejamos pasar leads buenos**, aunque algunos falsos positivos son aceptables.
+**Salida:**
+- `data/datos_multi_universidad_limpios.csv` - Datos normalizados
+- `data/datos_multi_universidad_features.csv` - Con features ML
 
----
+#### 2. Validar Normalización
 
-## 📊 Features Más Importantes
+```bash
+# Validación completa
+python scripts/validate_normalization.py --check-resolutions --check-quality
+```
 
-El modelo identifica estas variables como las más predictivas:
+#### 3. Auditoría de Calidad
 
-1. **UTM Source** (34.6%) - Plataforma de origen (Google, Facebook)
-2. **UTM Medium** (23.1%) - Tipo de campaña (Paid Social, Organic)
-3. **Ratio Llamadas/Días** (10.1%) - Intensidad del seguimiento
-4. **Contador Llamadas** (9.1%) - Número total de intentos
-5. **Días Gestión** (7.6%) - Tiempo desde primer contacto
+```bash
+# Verificar realismo y consistencia
+python scripts/audit_final.py
+```
 
----
+#### 4. Ejecutar Aplicación Streamlit
+
+```bash
+streamlit run app.py
+```
 
 ## 📁 Estructura del Proyecto
 
 ```
-Prob Leads - Data Science Nods/
-│
+Smart-Scoring-Grupo-Nods/
+├── config/
+│   └── normalization_config.json    # Configuración de normalización
 ├── data/
-│   ├── Consulta_Base_Unificada_UNAB.xls     # Datos originales del CRM
-│   ├── datos_limpios.csv                    # Después de limpieza
-│   └── datos_con_features.csv               # Con features creadas
-│
+│   ├── README.md                    # Instrucciones para datos
+│   └── *.csv                        # Datos procesados (no en Git)
+├── docs/
+│   └── NORMALIZATION_GUIDE.md       # Guía completa de normalización
 ├── models/
-│   ├── modelo_scoring.pkl                   # Modelo Random Forest entrenado
-│   ├── label_encoders.pkl                   # Encoders para categorías
-│   ├── metricas_modelo.json                 # Métricas de performance
-│   ├── roc_curve.png                        # Curva ROC
-│   ├── feature_importance.png               # Importancia de features
-│   └── score_distribution.png               # Distribución de scores
-│
+│   ├── modelo_scoring_sin_leakage.pkl
+│   └── *.png                        # Visualizaciones
 ├── scripts/
-│   ├── clean_data.py                        # Paso 1: Limpieza
-│   ├── create_features.py                   # Paso 2: Feature Engineering
-│   └── train_model.py                       # Paso 3: Entrenamiento
-│
-├── app.py                                    # Aplicación Streamlit
-├── requirements.txt                          # Dependencias Python
-└── README.md                                 # Este archivo
+│   ├── prepare_multi_university_data.py  # Normalización principal
+│   ├── validate_normalization.py         # Validación
+│   ├── audit_final.py                    # Auditoría de calidad
+│   ├── create_normalization_config.py    # Generador de config
+│   └── ...                               # Otros scripts
+├── app.py                           # Aplicación Streamlit
+├── requirements.txt                 # Dependencias
+└── README.md                        # Este archivo
 ```
 
----
+## 🔧 Normalización de Datos
 
-## ⚙️ Instalación y Uso
+### Nombres de Columnas
 
-### 1️⃣ Requisitos Previos
+El sistema normaliza automáticamente **17 variaciones** de nombres de columnas:
 
-- Python 3.10 o superior
-- pip instalado
+| Original | Normalizado | Universidades |
+|----------|-------------|---------------|
+| `Resolucion` | `Resolución` | Crexe, UEES, Anahuac |
+| `Lamadas_discador` | `Llamadas_discador` | Crexe, UEES, Anahuac |
+| `CHKENTRANTEWHATSAPP` | `WhatsApp entrante` | Crexe, UEES, Anahuac |
+| `Contador de Llamadas` | `CONTADOR_LLAMADOS_TEL` | UEES |
 
-### 2️⃣ Instalar Dependencias
+### Valores de Resolución
+
+Categoriza **60+ variaciones** en 9 categorías estándar:
+
+- **Success** (1.28%): Matriculado, Admitido, etc.
+- **In Progress** (0.21%): En proceso de pago, Oportunidad de venta
+- **Rejected** (94.5%): No contact, Not interested, Phone issue, etc.
+
+### Valores Dentro de Columnas
+
+- **Canal**: `"wsp"`, `"WSP"`, `"Wsp"` → `"whatsapp"`
+- **Programa**: Todo a MAYÚSCULAS
+- **UTMs**: Todo a minúsculas
+
+## 📈 Calidad de Datos
+
+### Métricas de Completitud
+
+| Campo | Cobertura |
+|-------|-----------|
+| Teléfono | 99.8% |
+| Email válido | 95.8% |
+| Programa | 72.9% |
+| Resolución | 100% |
+
+### Validación
+
+- ✅ **0 errores críticos**
+- ✅ **0 advertencias**
+- ✅ **Score: 100/100**
+
+## 🔍 Agregar Nueva Universidad
+
+### Paso 1: Colocar Archivo
 
 ```bash
-pip install -r requirements.txt
+data/Consulta_Base_Unificada_NuevaUniversidad.xls
 ```
 
-### 3️⃣ Ejecutar el Pipeline Completo (Opcional)
-
-Si quieres procesar datos nuevos desde cero:
+### Paso 2: Analizar Diferencias
 
 ```bash
-# Paso 1: Limpiar datos
-python scripts/clean_data.py
-
-# Paso 2: Crear features
-python scripts/create_features.py
-
-# Paso 3: Entrenar modelo (opcional, ya está entrenado)
-python scripts/train_model.py
+python scripts/analizar_diferencias_universidades.py
 ```
 
-### 4️⃣ Lanzar la Aplicación Web
+### Paso 3: Actualizar Configuración
+
+Editar `config/normalization_config.json`:
+
+```json
+{
+  "column_mappings": {
+    "NombreEspecifico": "NombreEstandar"
+  },
+  "universities": [..., "NuevaUniversidad"]
+}
+```
+
+### Paso 4: Procesar
 
 ```bash
-streamlit run app.py
+python scripts/prepare_multi_university_data.py
+python scripts/validate_normalization.py
 ```
 
-La app se abrirá en tu navegador en `http://localhost:8501`
+## 📚 Documentación
+
+- **[Guía de Normalización](docs/NORMALIZATION_GUIDE.md)** - Documentación completa (400+ líneas)
+- **[README de Datos](data/README.md)** - Instrucciones para datos
+
+## 🛠️ Scripts Disponibles
+
+| Script | Descripción |
+|--------|-------------|
+| `prepare_multi_university_data.py` | Normalización principal |
+| `validate_normalization.py` | Validación de consistencia |
+| `audit_final.py` | Auditoría de calidad |
+| `create_normalization_config.py` | Generador de configuración |
+| `analizar_diferencias_universidades.py` | Análisis de diferencias |
+| `train_model_sin_leakage.py` | Entrenamiento sin data leakage |
+
+## 🎨 Aplicación Streamlit
+
+La aplicación permite:
+
+- 📤 Subir archivos CRM de cualquier universidad
+- 🔄 Normalización automática
+- 📊 Scoring predictivo de leads
+- 📈 Visualizaciones interactivas
+- 📥 Exportación de resultados
+
+## ⚠️ Datos Sensibles
+
+**IMPORTANTE**: Los archivos de datos CRM (`.xls`, `.xlsx`, `.csv`) están excluidos del repositorio por contener información sensible.
+
+Para usar el sistema:
+1. Coloca tus archivos en la carpeta `data/`
+2. Los archivos serán ignorados por Git automáticamente
+3. Ejecuta los scripts de normalización
+
+## 📊 Resultados
+
+### Antes de la Normalización
+
+- 43 columnas únicas entre universidades
+- Solo 4 columnas comunes
+- Datos inconsistentes
+- Imposible entrenar modelo global
+
+### Después de la Normalización
+
+- ✅ 32 columnas idénticas en todas
+- ✅ 133,209 leads procesados
+- ✅ 42 features de ML
+- ✅ Score de calidad: 100/100
+- ✅ Listo para modelo global
+
+## 🤝 Contribuir
+
+1. Fork el proyecto
+2. Crea una rama (`git checkout -b feature/AmazingFeature`)
+3. Commit cambios (`git commit -m 'Add AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📝 Licencia
+
+Este proyecto es privado y confidencial del Grupo Nods.
+
+## 👥 Contacto
+
+Para consultas técnicas, revisar:
+- `docs/NORMALIZATION_GUIDE.md`
+- Ejecutar `python scripts/validate_normalization.py`
 
 ---
 
-## 💻 Cómo Usar la App
-
-### Opción 1: Subir Archivo Nuevo
-
-1. Procesa tu archivo Excel del CRM con `clean_data.py` y `create_features.py`
-2. En la app, selecciona **"📤 Subir Datos"**
-3. Sube el CSV generado (`datos_con_features.csv`)
-4. Click en **"🚀 GENERAR SCORES"**
-5. Descarga el CSV con la columna `Probabilidad_Matricula` (0-100%)
-
-### Opción 2: Demo con Datos Existentes
-
-1. Selecciona **"📊 Demo con Datos Existentes"**
-2. La app cargará automáticamente los datos de entrenamiento
-3. Explora los dashboards y top leads
-
----
-
-## 🧠 Explicación del Proceso
-
-### Paso 1: Limpieza de Datos (`clean_data.py`)
-
-**¿Qué hace?**
-- Elimina columnas 100% vacías (Etapa, Canal)
-- **Detecta duplicados**: mismo email + mismo programa (409 eliminados)
-- Valida emails con expresiones regulares
-- Normaliza texto (mayúsculas, espacios)
-- Procesa fechas y calcula días de gestión
-
-**Input**: `Consulta_Base_Unificada_UNAB.xls` (6,238 leads)  
-**Output**: `datos_limpios.csv` (5,829 leads)
-
----
-
-### Paso 2: Feature Engineering (`create_features.py`)
-
-**¿Qué hace?**
-- Crea 11 features nuevas:
-  - `tiene_email`: Flag 1/0 si email válido
-  - `whatsapp_entrante_flag`: 1 si escribió por WhatsApp
-  - `lead_reciente`: 1 si <7 días
-  - `lead_antiguo`: 1 si >30 días
-  - `ratio_llamadas_dias`: Llamadas ÷ días
-  - `alta_actividad_llamadas`: 1 si >5 llamadas
-  - `programa_categoria`: Tecnología, Negocios, Derecho, etc.
-  - `base_categoria`: Pregrado, Posgrado, LETO
-  - `utm_source_clean`: Google, Facebook, Otros
-  - `utm_medium_clean`: Paid Social, Organic, Otros
-
-**Input**: `datos_limpios.csv`  
-**Output**: `datos_con_features.csv` (19 columnas)
-
----
-
-### Paso 3: Entrenamiento del Modelo (`train_model.py`)
-
-**¿Qué hace?**
-- Separa datos 80% entrenamiento / 20% prueba
-- Entrena **Random Forest** con 100 árboles
-- Balancea clases desbalanceadas (solo 5% matriculan)
-- Genera métricas y visualizaciones
-- Guarda modelo en `modelo_scoring.pkl`
-
-**Parámetros del modelo**:
-```python
-RandomForestClassifier(
-    n_estimators=100,
-    max_depth=10,
-    min_samples_split=20,
-    min_samples_leaf=10,
-    class_weight='balanced'
-)
-```
-
-**Output**: 
-- `modelo_scoring.pkl`
-- `roc_curve.png`
-- `feature_importance.png`
-- `metricas_modelo.json`
-
----
-
-## 📈 Cómo Interpretar los Scores
-
-| Score | Acción Recomendada | Prioridad |
-|-------|-------------------|-----------|
-| **80-100%** | 🔥 Llamar inmediatamente | Alta |
-| **60-79%** | ⚡ Llamar hoy | Media-Alta |
-| **30-59%** | 📞 Llamar esta semana | Media |
-| **0-29%** | 📧 Enviar email automático | Baja |
-
----
-
-## 🔗 Integración con n8n y Power BI
-
-### Opción A: n8n (Automático)
-
-1. **n8n Trigger**: Cron diario (ej. 8:00 AM)
-2. **HTTP Request**: Llama a API Python en Azure Function
-3. **Python Script**: Ejecuta pipeline + predicciones
-4. **Update Neotel CRM**: Actualiza campo `score_matricula`
-5. **Notificación**: Slack/Email con top 20 leads
-
-### Opción B: Power BI (Manual)
-
-1. Ejecutar pipeline local o en Azure
-2. Exportar CSV con scores
-3. Importar a Power BI
-4. Crear dashboard con:
-   - Distribución de scores
-   - Top leads por asesor
-   - Conversión por canal
-
----
-
-## 🐛 Troubleshooting
-
-### Error: "Missing optional dependency 'xlrd'"
-```bash
-pip install xlrd openpyxl
-```
-
-### Error: "KeyError: 'Resolución'"
-- Asegúrate de que el archivo Excel tenga las columnas originales del CRM
-
-### App no carga modelo
-- Verifica que existan los archivos en `models/modelo_scoring.pkl` y `models/label_encoders.pkl`
-- Ejecuta `python scripts/train_model.py` para regenerar
-
----
-
-## 📞 Contacto y Soporte
-
-**Desarrollado por**: Francisco (Data Science)  
-**Para**: Grupo Nods / UNAB  
-**Fecha**: Diciembre 2025
-
----
-
-## 📝 Notas Técnicas
-
-### ¿Por qué Random Forest?
-
-- ✅ Maneja bien datos tabulares y categóricos
-- ✅ Robusto ante outliers
-- ✅ No requiere normalización
-- ✅ Interpretable (feature importance)
-- ✅ Buen rendimiento sin tunning excesivo
-
-### ¿Por qué Precision es "baja" (33%)?
-
-Es un trade-off intencional:
-- **Recall alto (83%)**: No queremos perder leads buenos
-- **Precision moderada (33%)**: Aceptamos algunos falsos positivos
-
-**Ejemplo**: Si el modelo dice "Este lead se matriculará", tenemos 33% de certeza. PERO si un lead SÍ se matricula, el modelo lo detectó el 83% de las veces.
-
-Para el Call Center, **es mejor llamar 3 leads (2 falsos positivos + 1 real) que perder 1 lead real**.
-
----
-
-## 🚀 Próximos Pasos (Roadmap)
-
-- [ ] Deployment en Azure App Service / Functions
-- [ ] API REST para integración n8n
-- [ ] Dashboard Power BI integrado
-- [ ] Reentrenamiento automático mensual
-- [ ] A/B Testing con Call Center
-- [ ] Alertas push para leads >90%
-
----
-
-## 📄 Licencia
-
-Proyecto privado de Grupo Nods. Todos los derechos reservados.
+**Desarrollado para**: Grupo Nods  
+**Fecha**: Diciembre 2025  
+**Estado**: ✅ Producción

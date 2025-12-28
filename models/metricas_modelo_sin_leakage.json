@@ -1,0 +1,125 @@
+{
+  "accuracy_test": 0.8216725471060731,
+  "auc_test": 0.9245432777905446,
+  "recall_test": 0.900523560209424,
+  "precision_test": 0.03507340946166395,
+  "n_train": 106567,
+  "n_test": 26642,
+  "sin_leakage": true,
+  "features_usadas": [
+    "universidad",
+    "CONTADOR_LLAMADOS_TEL",
+    "Llamadas_discador",
+    "dias_gestion",
+    "ratio_llamadas_dias",
+    "alta_actividad_llamadas",
+    "lead_reciente",
+    "lead_antiguo",
+    "tiene_email",
+    "whatsapp_entrante_flag",
+    "programa_categoria",
+    "base_categoria",
+    "utm_source_clean",
+    "utm_medium_clean"
+  ],
+  "feature_importance": [
+    {
+      "feature": "universidad",
+      "importance": 0.4432038642713989
+    },
+    {
+      "feature": "programa_categoria",
+      "importance": 0.1258496068235928
+    },
+    {
+      "feature": "ratio_llamadas_dias",
+      "importance": 0.09862430893471588
+    },
+    {
+      "feature": "CONTADOR_LLAMADOS_TEL",
+      "importance": 0.07676725313661152
+    },
+    {
+      "feature": "dias_gestion",
+      "importance": 0.06303806214373017
+    },
+    {
+      "feature": "base_categoria",
+      "importance": 0.06157316354742252
+    },
+    {
+      "feature": "Llamadas_discador",
+      "importance": 0.036158875467827666
+    },
+    {
+      "feature": "tiene_email",
+      "importance": 0.02854258748938271
+    },
+    {
+      "feature": "utm_medium_clean",
+      "importance": 0.01739515685170532
+    },
+    {
+      "feature": "lead_reciente",
+      "importance": 0.015115555433242254
+    },
+    {
+      "feature": "alta_actividad_llamadas",
+      "importance": 0.01402197688747284
+    },
+    {
+      "feature": "utm_source_clean",
+      "importance": 0.01000480225929974
+    },
+    {
+      "feature": "lead_antiguo",
+      "importance": 0.009380308119075179
+    },
+    {
+      "feature": "whatsapp_entrante_flag",
+      "importance": 0.0003244786345223176
+    }
+  ],
+  "metricas_por_universidad": {
+    "Universidad_0": {
+      "total": 2726,
+      "positivos": 0,
+      "accuracy": 1.0,
+      "auc": 0.0,
+      "recall": 0.0,
+      "precision": 0.0
+    },
+    "Universidad_1": {
+      "total": 6314,
+      "positivos": 0,
+      "accuracy": 1.0,
+      "auc": 0.0,
+      "recall": 0.0,
+      "precision": 0.0
+    },
+    "Universidad_2": {
+      "total": 5152,
+      "positivos": 2,
+      "accuracy": 0.999611801242236,
+      "auc": 0.8508737864077669,
+      "recall": 0.0,
+      "precision": 0.0
+    },
+    "Universidad_3": {
+      "total": 11593,
+      "positivos": 185,
+      "accuracy": 0.5932890537393255,
+      "auc": 0.8379060687616088,
+      "recall": 0.9081081081081082,
+      "precision": 0.0345252774352651
+    },
+    "Universidad_4": {
+      "total": 857,
+      "positivos": 4,
+      "accuracy": 0.9603267211201867,
+      "auc": 0.981535756154748,
+      "recall": 1.0,
+      "precision": 0.10526315789473684
+    }
+  }
+}
