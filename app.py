@@ -425,9 +425,27 @@ def detectar_tipo_archivo(df):
 def preparar_datos_prediccion(df, encoders):
     """
     Prepara los datos para prediccion (mismo proceso que entrenamiento)
+    IMPORTANTE: El orden de las columnas debe coincidir EXACTAMENTE con el entrenamiento
     """
-    # Columnas necesarias para el modelo global (incluye universidad)
-    columnas_modelo = [
+    # Codificar categoricas PRIMERO (incluye universidad)
+    columnas_categoricas = ['universidad', 'programa_categoria', 'base_categoria', 'utm_source_clean', 'utm_medium_clean']
+    
+    df_encoded = df.copy()
+    
+    for col in columnas_categoricas:
+        if col in df_encoded.columns and col in encoders:
+            le = encoders[col]
+            # Manejar categorias nuevas
+            df_encoded[col] = df_encoded[col].apply(
+                lambda x: x if x in le.classes_ else le.classes_[0]
+            )
+            df_encoded[col] = le.transform(df_encoded[col])
+        elif col not in df_encoded.columns:
+            st.warning(f"⚠️ Columna {col} no encontrada, usando valor por defecto")
+            df_encoded[col] = 0
+    
+    # ORDEN EXACTO de columnas como en el entrenamiento
+    columnas_modelo_orden = [
         'universidad',
         'CONTADOR_LLAMADOS_TEL',
         'Llamadas_discador',
@@ -445,25 +463,14 @@ def preparar_datos_prediccion(df, encoders):
     ]
     
     # Verificar que todas las columnas existen
-    columnas_faltantes = [col for col in columnas_modelo if col not in df.columns]
+    columnas_faltantes = [col for col in columnas_modelo_orden if col not in df_encoded.columns]
     if columnas_faltantes:
         st.error(f"❌ Faltan columnas necesarias: {columnas_faltantes}")
+        st.info("💡 Asegurate de que el archivo esté en el formato correcto.")
         return None
     
-    # Seleccionar columnas
-    X = df[columnas_modelo].copy()
-    
-    # Codificar categoricas (incluye universidad)
-    columnas_categoricas = ['universidad', 'programa_categoria', 'base_categoria', 'utm_source_clean', 'utm_medium_clean']
-    
-    for col in columnas_categoricas:
-        if col in encoders:
-            le = encoders[col]
-            # Manejar categorias nuevas
-            X[col] = X[col].apply(
-                lambda x: x if x in le.classes_ else le.classes_[0]
-            )
-            X[col] = le.transform(X[col])
+    # Seleccionar columnas EN EL ORDEN CORRECTO
+    X = df_encoded[columnas_modelo_orden].copy()
     
     return X
 
@@ -559,44 +566,28 @@ def main():
     
     st.markdown("---")
     
-    # Sidebar
+    # Sidebar simplificado
     with st.sidebar:
-        # Logo Grupo Nods
-        try:
-            st.image("https://raw.githubusercontent.com/Franco-Arce/Smart-Scoring-Grupo-Nods/main/assets/grupo_nods_logo.png", use_container_width=True)
-        except:
-            st.markdown("### 🎓 GRUPO NODS")
-        
-        st.markdown("### ⚙️ Configuración")
+        st.markdown("### 🎓 Smart Scoring")
+        st.markdown("Sistema de Lead Scoring para Grupo Nods")
         
         st.markdown("---")
-        st.markdown("### 📈 Modelo Limpio Multi-Universidad")
-        st.info("""
-        **Random Forest (SIN Leakage)**
-        
-        - 🎓 **5 Universidades**
-        - 📊 **133,209 leads** entrenados
-        - ✅ **AUC-ROC: 0.9245**
-        - ✅ **Recall: 90%**
-        - ✅ **Accuracy: 82%**
-        - ⭐ **Producción-Ready**
-        
-        
-Modelo entrenado con datos de:
-        UNAB, Crexe, UEES, Anahuac, Unisangil
-        
-        **SIN data leakage** - Usa solo info
-        disponible al momento del contacto.
+        st.markdown("### 📊 Universidades Soportadas")
+        st.markdown("""
+        - ✅ UNAB
+        - ✅ Crexe  
+        - ✅ UEES
+        - ✅ Anahuac
+        - ✅ Unisangil
         """)
         
         st.markdown("---")
-        st.markdown("### 🎯 Top Features")
+        st.markdown("### 💡 Instrucciones")
         st.markdown("""
-        1. **Universidad** (44.3%)
-        2. **Programa Categoría** (12.6%)
-        3. **Ratio Llamadas/Días** (9.9%)
-        4. **Contador Llamadas** (7.7%)
-        5. **Días Gestión** (6.3%)
+        1. Subí el archivo del CRM
+        2. Procesá los datos
+        3. Generá los scores
+        4. Descargá los resultados
         """)
     
     # Contenido principal - Solo modo Upload
