@@ -445,21 +445,22 @@ def preparar_datos_prediccion(df, encoders):
             df_encoded[col] = 0
     
     # ORDEN EXACTO de columnas como en el entrenamiento
+    # Este orden fue extraído directamente del modelo entrenado
     columnas_modelo_orden = [
         'universidad',
         'CONTADOR_LLAMADOS_TEL',
         'Llamadas_discador',
         'dias_gestion',
         'ratio_llamadas_dias',
+        'alta_actividad_llamadas',  # IMPORTANTE: va aquí, no al final
+        'lead_reciente',
+        'lead_antiguo',
+        'tiene_email',
+        'whatsapp_entrante_flag',
         'programa_categoria',
         'base_categoria',
         'utm_source_clean',
-        'utm_medium_clean',
-        'tiene_email',
-        'whatsapp_entrante_flag',
-        'lead_reciente',
-        'lead_antiguo',
-        'alta_actividad_llamadas'
+        'utm_medium_clean'
     ]
     
     # Verificar que todas las columnas existen
