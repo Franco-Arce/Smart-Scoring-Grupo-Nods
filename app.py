@@ -110,6 +110,23 @@ def detectar_universidad(df):
     Detecta automáticamente la universidad basándose en características del dataset
     Returns: 'UNAB', 'Crexe', 'UEES', 'Anahuac', 'Unisangil', 'Desconocido'
     """
+    # Método 0: Analizar columna "Base de datos" (MÁS CONFIABLE)
+    if 'Base de datos' in df.columns:
+        bases_str = ' '.join(df['Base de datos'].astype(str).str.upper().unique())
+        
+        # Buscar nombres de universidades en las bases de datos
+        # Orden de prioridad: buscar patrones más específicos primero
+        if 'UNAB' in bases_str:
+            return 'UNAB'
+        elif 'CREXE' in bases_str:
+            return 'Crexe'
+        elif 'UEES' in bases_str:
+            return 'UEES'
+        elif 'ANAHUAC' in bases_str or 'ANÁHUAC' in bases_str:
+            return 'Anahuac'
+        elif 'UNISANGIL' in bases_str or 'SANGIL' in bases_str:
+            return 'Unisangil'
+    
     # Método 1: Analizar características específicas de columnas
     col_names = [str(c).lower() for c in df.columns]
     
@@ -134,15 +151,16 @@ def detectar_universidad(df):
         elif 'UNISANGIL' in programas_str:
             return 'Unisangil'
     
-    # Método 3: Por cantidad de leads (aproximado)
-    if len(df) < 7000:
-        return 'UNAB'  # UNAB tiene ~6K leads
-    elif len(df) > 40000:
+    # Método 3: Por cantidad de leads (ÚLTIMO RECURSO - menos confiable)
+    # Solo usar si ningún otro método funcionó
+    if len(df) > 40000:
         return 'Crexe'  # Crexe tiene ~44K leads
     elif len(df) > 25000:
         return 'UEES'  # UEES tiene ~27K leads
     elif len(df) > 10000:
         return 'Anahuac'  # Anahuac tiene ~15K leads
+    elif len(df) > 5000:
+        return 'UNAB'  # UNAB tiene ~6K leads
     else:
         return 'Unisangil'  # Unisangil tiene ~4K leads
 
@@ -283,9 +301,17 @@ def crear_features_integrado(df):
         
         # 0. DETECTAR Y AGREGAR UNIVERSIDAD
         if 'universidad' not in df_features.columns:
-            universidad_detectada = detectar_universidad(df_features)
+            # Priorizar selección manual del usuario
+            if 'universidad_manual' in st.session_state and st.session_state['universidad_manual'] != "Detección Automática":
+                universidad_detectada = st.session_state['universidad_manual']
+                st.success(f"🎓 Universidad seleccionada manualmente: **{universidad_detectada}**")
+            else:
+                # Detección automática
+                universidad_detectada = detectar_universidad(df_features)
+                st.info(f"🎓 Universidad detectada automáticamente: **{universidad_detectada}**")
+            
             df_features['universidad'] = universidad_detectada
-            st.info(f"🎓 Universidad detectada: **{universidad_detectada}**")
+
         
         # 1. Features de Email
         if 'email_valido' in df_features.columns:
@@ -326,18 +352,38 @@ def crear_features_integrado(df):
         # 5. Categorizar Programas
         def categorizar_programa(programa):
             programa_str = str(programa).upper()
+            
+            # Casos especiales primero
+            if programa_str in ['NO ESPECIFICADO', 'NAN', 'NONE', '']:
+                return 'NO_ESPECIFICADO'
+            
+            # Tecnología
             if 'TECNOLOGÍA' in programa_str or 'TECNOLOGIA' in programa_str:
                 return 'TECNOLOGIA'
+            
+            # Posgrados
             elif 'ESPECIALIZACIÓN' in programa_str or 'ESPECIALIZACION' in programa_str:
                 return 'ESPECIALIZACION'
             elif 'MAESTRÍA' in programa_str or 'MAESTRIA' in programa_str:
                 return 'MAESTRIA'
+            elif 'DOCTORADO' in programa_str:
+                return 'DOCTORADO'
+            
+            # Áreas específicas
             elif 'DERECHO' in programa_str:
                 return 'DERECHO'
-            elif 'ADMINISTR' in programa_str or 'NEGOCIO' in programa_str or 'CONTAD' in programa_str:
+            elif 'ADMINISTR' in programa_str or 'NEGOCIO' in programa_str or 'CONTAD' in programa_str or 'EMPRESA' in programa_str:
                 return 'NEGOCIOS'
-            elif 'SALUD' in programa_str or 'FARMACIA' in programa_str or 'EPIDEMIO' in programa_str:
+            elif 'SALUD' in programa_str or 'FARMACIA' in programa_str or 'EPIDEMIO' in programa_str or 'MEDICINA' in programa_str or 'ENFERM' in programa_str:
                 return 'SALUD'
+            elif 'INGENIER' in programa_str:
+                return 'INGENIERIA'
+            elif 'EDUCAC' in programa_str or 'PEDAGOG' in programa_str:
+                return 'EDUCACION'
+            elif 'ARTE' in programa_str or 'DISEÑO' in programa_str or 'DISENO' in programa_str or 'AUDIOVISUAL' in programa_str or 'LITERATURA' in programa_str:
+                return 'ARTE_DISENO'
+            elif 'PSICOLOG' in programa_str or 'SOCIAL' in programa_str:
+                return 'CIENCIAS_SOCIALES'
             else:
                 return 'OTROS'
         
@@ -349,12 +395,33 @@ def crear_features_integrado(df):
         # 6. Categorizar Base de Datos
         def categorizar_base(base):
             base_str = str(base).upper()
+            
+            # Casos especiales
+            if base_str in ['NAN', 'NONE', '']:
+                return 'NO_ESPECIFICADO'
+            
+            # Categorías principales
             if 'PREGRADO' in base_str:
                 return 'PREGRADO'
             elif 'POSGRADO' in base_str or 'POSTGRADO' in base_str:
                 return 'POSGRADO'
             elif 'LETO' in base_str:
                 return 'LETO'
+            
+            # Detectar por número de base (UNAB usa números)
+            elif 'CONSOLIDADO' in base_str or 'CONSOLIDADA' in base_str:
+                return 'BASE_CONSOLIDADA'
+            elif 'PRUEBA' in base_str or 'TEST' in base_str:
+                return 'BASE_PRUEBA'
+            elif 'RMK' in base_str or 'REMARKETING' in base_str:
+                return 'REMARKETING'
+            
+            # Detectar bases numeradas (ej: "101 - BBDD")
+            elif any(num in base_str for num in ['101', '102', '103', '104', '105']):
+                return 'BASE_PRINCIPAL'
+            elif any(num in base_str for num in ['22', '23', '24', '25']):
+                return 'BASE_SECUNDARIA'
+            
             else:
                 return 'OTRO'
         
@@ -365,11 +432,31 @@ def crear_features_integrado(df):
         
         # 7. Limpiar UTM Source
         def limpiar_utm_source(source):
-            source_str = str(source).lower()
+            source_str = str(source).lower().strip()
+            
+            # Valores vacíos o no disponibles
+            if source_str in ['no_disponible', 'nan', 'none', '', 'no disponible']:
+                return 'no_disponible'
+            
+            # Fuentes conocidas
             if 'google' in source_str:
                 return 'google'
             elif 'fb' in source_str or 'facebook' in source_str:
                 return 'facebook'
+            elif 'instagram' in source_str or 'ig' in source_str:
+                return 'instagram'
+            elif 'linkedin' in source_str:
+                return 'linkedin'
+            elif 'twitter' in source_str or 'x.com' in source_str:
+                return 'twitter'
+            elif 'tiktok' in source_str:
+                return 'tiktok'
+            elif 'youtube' in source_str or 'yt' in source_str:
+                return 'youtube'
+            elif 'email' in source_str or 'correo' in source_str:
+                return 'email'
+            elif 'direct' in source_str or 'directo' in source_str:
+                return 'directo'
             else:
                 return 'otros'
         
@@ -380,11 +467,27 @@ def crear_features_integrado(df):
         
         # 8. Limpiar UTM Medium
         def limpiar_utm_medium(medium):
-            medium_str = str(medium).lower()
-            if 'paid' in medium_str or 'social' in medium_str:
-                return 'paid_social'
-            elif 'organic' in medium_str:
+            medium_str = str(medium).lower().strip()
+            
+            # Valores vacíos o no disponibles
+            if medium_str in ['no_disponible', 'nan', 'none', '', 'no disponible', 'test']:
+                return 'no_disponible'
+            
+            # Medios conocidos
+            if 'paid' in medium_str:
+                return 'paid'
+            elif 'social' in medium_str:
+                return 'social'
+            elif 'organic' in medium_str or 'organico' in medium_str:
                 return 'organic'
+            elif 'cpc' in medium_str or 'ppc' in medium_str:
+                return 'cpc'
+            elif 'email' in medium_str or 'correo' in medium_str:
+                return 'email'
+            elif 'referral' in medium_str or 'referido' in medium_str:
+                return 'referral'
+            elif 'display' in medium_str or 'banner' in medium_str:
+                return 'display'
             else:
                 return 'otros'
         
@@ -567,10 +670,26 @@ def main():
     
     st.markdown("---")
     
-    # Sidebar simplificado
+    # Sidebar con selector de universidad
     with st.sidebar:
         st.markdown("### 🎓 Smart Scoring")
         st.markdown("Sistema de Lead Scoring para Grupo Nods")
+        
+        st.markdown("---")
+        st.markdown("### 🏫 Selección de Universidad")
+        
+        # Selector manual de universidad
+        universidad_manual = st.selectbox(
+            "Seleccioná la universidad:",
+            options=["Detección Automática", "UNAB", "Crexe", "UEES", "Anahuac", "Unisangil"],
+            help="Seleccioná manualmente la universidad o dejá que el sistema la detecte automáticamente"
+        )
+        
+        # Guardar en session state
+        st.session_state['universidad_manual'] = universidad_manual
+        
+        if universidad_manual != "Detección Automática":
+            st.info(f"✅ Universidad seleccionada: **{universidad_manual}**")
         
         st.markdown("---")
         st.markdown("### 📊 Universidades Soportadas")
@@ -585,10 +704,11 @@ def main():
         st.markdown("---")
         st.markdown("### 💡 Instrucciones")
         st.markdown("""
-        1. Subí el archivo del CRM
-        2. Procesá los datos
-        3. Generá los scores
-        4. Descargá los resultados
+        1. Seleccioná la universidad (opcional)
+        2. Subí el archivo del CRM
+        3. Procesá los datos
+        4. Generá los scores
+        5. Descargá los resultados
         """)
     
     # Contenido principal - Solo modo Upload
