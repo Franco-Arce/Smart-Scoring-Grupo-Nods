@@ -206,10 +206,6 @@ La aplicación permite:
 - 📈 Visualizaciones interactivas
 - 📥 Exportación de resultados
 
-## ⚠️ Datos Sensibles
-
-**IMPORTANTE**: Los archivos de datos CRM (`.xls`, `.xlsx`, `.csv`) están excluidos del repositorio por contener información sensible.
-
 Para usar el sistema:
 1. Coloca tus archivos en la carpeta `data/`
 2. Los archivos serán ignorados por Git automáticamente
@@ -232,17 +228,10 @@ Para usar el sistema:
 - ✅ Score de calidad: 100/100
 - ✅ Listo para modelo global
 
-## 🤝 Contribuir
-
-1. Fork el proyecto
-2. Crea una rama (`git checkout -b feature/AmazingFeature`)
-3. Commit cambios (`git commit -m 'Add AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
 
 ## 📝 Licencia
 
-Este proyecto es privado y confidencial del Grupo Nods.
+Este proyecto es privado y confidencial de Grupo Nods.
 
 ## 👥 Contacto
 
