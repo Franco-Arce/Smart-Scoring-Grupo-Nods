@@ -232,10 +232,28 @@ def limpiar_datos_integrado(df):
         
         # 2. Crear variable objetivo (TARGET)
         if 'Resolución' in df_limpio.columns:
-            resoluciones_positivas = ['Matriculado', 'Admitido', 'En proceso de pago']
-            df_limpio['target'] = df_limpio['Resolución'].apply(
-                lambda x: 1 if str(x).strip() in resoluciones_positivas else 0
-            )
+            # Usar matching flexible para soportar variaciones entre universidades
+            # UEES usa: "Matriculado / Inscripto", "En proceso de pago - No contesta"
+            # Otras universidades: "Matriculado", "Admitido", "En proceso de pago"
+            
+            def es_resolucion_positiva(resolucion):
+                """Detecta si una resolución indica probabilidad de matrícula"""
+                if pd.isna(resolucion):
+                    return 0
+                
+                resol_str = str(resolucion).strip().lower()
+                
+                # Patrones de resoluciones positivas
+                patrones_positivos = [
+                    'matricul',  # Cubre: Matriculado, Matriculado / Inscripto
+                    'inscripto',  # UEES específico
+                    'admitido',
+                    'proceso de pago',  # Cubre: En proceso de pago, En proceso de pago - No contesta
+                ]
+                
+                return 1 if any(patron in resol_str for patron in patrones_positivos) else 0
+            
+            df_limpio['target'] = df_limpio['Resolución'].apply(es_resolucion_positiva)
             st.success(f"✅ Variable objetivo creada: {df_limpio['target'].sum()} matriculados ({df_limpio['target'].mean()*100:.2f}%)")
         else:
             st.warning("⚠️ No se encontró columna 'Resolución' - creando target = 0")
