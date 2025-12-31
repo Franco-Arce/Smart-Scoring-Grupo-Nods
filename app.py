@@ -255,6 +255,25 @@ def limpiar_datos_integrado(df):
             
             df_limpio['target'] = df_limpio['Resolución'].apply(es_resolucion_positiva)
             st.success(f"✅ Variable objetivo creada: {df_limpio['target'].sum()} matriculados ({df_limpio['target'].mean()*100:.2f}%)")
+            
+            # 🔒 ELIMINAR COLUMNAS DE DATA LEAKAGE DESPUÉS DE CREAR TARGET
+            # Estas columnas contienen información del futuro y NO deben estar en el dataset
+            columnas_leakage = [
+                'Resolución',
+                'Ultima resolución',
+                'Estado principal',
+                'Fecha y hora del proximo llamado',
+                'Contador de Llamadas'  # Si existe (es diferente a CONTADOR_LLAMADOS_TEL)
+            ]
+            
+            columnas_eliminadas = []
+            for col in columnas_leakage:
+                if col in df_limpio.columns:
+                    df_limpio = df_limpio.drop(columns=[col])
+                    columnas_eliminadas.append(col)
+            
+            if columnas_eliminadas:
+                st.warning(f"🔒 Columnas de data leakage eliminadas: {', '.join(columnas_eliminadas)}")
         else:
             st.warning("⚠️ No se encontró columna 'Resolución' - creando target = 0")
         
@@ -418,15 +437,25 @@ def crear_features_integrado(df):
             if base_str in ['NAN', 'NONE', '']:
                 return 'NO_ESPECIFICADO'
             
-            # Categorías principales
-            if 'PREGRADO' in base_str:
+            # NUEVO: Detectar tipo de programa (GMP, DIPLOMADO, EVENTO)
+            # Esto es especialmente útil para UEES que tiene bases como:
+            # "57 - GMP Nuevos - noviembre", "51 - DIPLOMADOS FORM NATIVO", "53 - EVENTOS"
+            if 'GMP' in base_str:
+                return 'GMP'
+            elif 'DIPLOMADO' in base_str:
+                return 'DIPLOMADO'
+            elif 'EVENTO' in base_str:
+                return 'EVENTO'
+            
+            # Categorías principales (UNAB/Otras universidades)
+            elif 'PREGRADO' in base_str:
                 return 'PREGRADO'
             elif 'POSGRADO' in base_str or 'POSTGRADO' in base_str:
                 return 'POSGRADO'
             elif 'LETO' in base_str:
                 return 'LETO'
             
-            # Detectar por número de base (UNAB usa números)
+            # Detectar características especiales
             elif 'CONSOLIDADO' in base_str or 'CONSOLIDADA' in base_str:
                 return 'BASE_CONSOLIDADA'
             elif 'PRUEBA' in base_str or 'TEST' in base_str:
